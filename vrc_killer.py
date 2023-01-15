@@ -1,53 +1,91 @@
-import time
 import datetime
+import time
 import subprocess
-import os
 
-# Get the target time from the user in 24-hour format (HH:MM)
-target_time = input("Enter the target time in 24-hour format (HH:MM): ")
+from pydub import AudioSegment
+from pydub.playback import play
 
-# Convert the target time to a datetime object
-target_time = datetime.datetime.strptime(target_time, "%H:%M")
+# Ask the user for the countdown time
+target_time = input("Enter the countdown time in the format of hh:mm (24 hour time): ")
 
-# Get the current time
-current_time = datetime.datetime.now()
+# Get the current date and time
+now = datetime.datetime.now()
 
-# Calculate the time difference between the target time and the current time
-time_diff = target_time - current_time
+# Get the target date and time
+target = datetime.datetime.strptime(target_time, '%H:%M')
+target = target.replace(year=now.year, month=now.month, day=now.day)
 
-# Get the total number of seconds in the time difference
-total_seconds = int(time_diff.total_seconds())
+# Check if the target time is in the past
+if target < now:
+    target += datetime.timedelta(days=1)
 
-# Loop until the target time is reached
-while total_seconds > 0:
-    # Output the remaining time in hours and minutes
-    print(f"Time remaining: {int(total_seconds / 3600)} hours, {int((total_seconds % 3600) / 60)} minutes")
+# Calculate the remaining time
+
+flag_30 = 0
+flag_10 = 0
+flag_05 = 0
+flag_01 = 0
+flag_10s = 0
+while True:
     
-    # Check if 30 minutes, 10 minutes, 5 minutes, 1 minute, or 10 seconds remaining
-    if total_seconds == 1800:
-        os.system("afplay 30.wav")
-    elif total_seconds == 600:
-        os.system("afplay 10.wav")
-    elif total_seconds == 300:
-        os.system("afplay 5.wav")
-    elif total_seconds == 60:
-        os.system("afplay 1.wav")
-    elif total_seconds == 10:
-        os.system("afplay 10s.wav")
+    # Sets flags so sound only fires once
+
     
-    # Sleep for 1 second
+    # Get the current time
+    now = datetime.datetime.now()
+    # Calculate the remaining time
+    remaining_time = target - now
+    time_left = remaining_time.total_seconds()
+    
+    if time_left < 0:
+        break
+    elif time_left < 10:
+        if flag_10s == 0:
+            print(">>> 10s remaining <<<")
+            play(AudioSegment.from_file("10s.mp3"))
+            flag_10s = 1
+
+            
+    elif time_left < 60:
+        if flag_01 == 0:
+            flag_01 = 1
+            print(">>> 60s remaining <<<")
+            play(AudioSegment.from_file("1.mp3"))
+
+        
+    elif time_left < 300:
+        if flag_05 == 0:
+            flag_05 = 1
+            print(">>> 5 mins remaining <<<")
+            play(AudioSegment.from_file("5.mp3"))
+
+        
+    elif time_left < 600:
+        if flag_10 == 0:
+            flag_10 = 1
+            print(">>> 10 mins remaining <<<")
+            play(AudioSegment.from_file("10.mp3"))
+       
+    elif time_left < 1800:
+        if flag_30 == 0:
+            flag_30 = 1
+            print(">>> 30mins remaining <<<")
+            play(AudioSegment.from_file("30.mp3"))              
+    
+    
+    
+    remaining_time = datetime.timedelta(seconds=int(remaining_time.total_seconds()))
+    print("Remaining Time: {}".format(remaining_time))
     time.sleep(1)
-    
-    # Update the current time
-    current_time = datetime.datetime.now()
-    
-    # Update the time difference
-    time_diff = target_time - current_time
-    
-    # Update the total number of seconds
-    total_seconds = int(time_diff.total_seconds())
 
-# Terminate the VRChat process
-#subprocess.run(["pkill", "-f", "VRChat"])
-subprocess.run(["taskkill", "/F", "/IM", "VRChat.exe"])
-#os.system("pkill VRChat")
+
+
+print("Countdown finished!")
+
+while True:
+    try:
+        # Terminate the VRChat process
+        subprocess.run(["taskkill", "/F", "/IM", "VRChat.exe"])
+    except:
+        print("VRChat is not running or error occured")
+        time.sleep(5)

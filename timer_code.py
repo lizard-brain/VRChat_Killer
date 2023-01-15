@@ -1,6 +1,5 @@
 import datetime
 import time
-import os
 import subprocess
 
 from pydub import AudioSegment
@@ -66,7 +65,7 @@ while True:
             flag_10 = 1
             print(">>> 10 mins remaining <<<")
             play(AudioSegment.from_file("10.mp3"))
-        
+       
     elif time_left < 1800:
         if flag_30 == 0:
             flag_30 = 1
